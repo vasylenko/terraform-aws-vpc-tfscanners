@@ -1,0 +1,99 @@
+name: Terraform Security Scan With Various TF Scanners
+on:
+  push:
+jobs:
+  collectInputs:
+    name: Collect workflow inputs
+    runs-on: ubuntu-latest
+    outputs:
+      directories: ${{ steps.dirs.outputs.directories }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get root directories
+        id: dirs
+        uses: clowdhaus/terraform-composite-actions/directories@v1.9.0
+
+  trivy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/aquasecurity/trivy:latest
+    needs: collectInputs
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.collectInputs.outputs.directories) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Trivy IaC Scanner
+        run: |
+          trivy config \
+          -q \
+          --format table \
+          --exit-code 1 \
+          ${{ matrix.directory }}
+
+  terrascan:
+    runs-on: ubuntu-latest
+    needs: collectInputs
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.collectInputs.outputs.directories) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Terrascan
+        uses: tenable/terrascan-action@main
+        with: #
+          iac_dir: ${{ matrix.directory }} # path to a directory containing one or more IaC files (default ".")
+          iac_type: 'terraform' # IaC type (helm, k8s, kustomize, terraform)
+          iac_version: 'v14' # IaC version (helm: v3, k8s: v1, kustomize: v3, terraform: v12, v14)
+          policy_type: 'aws' # policy type (all, aws, azure, gcp, github, k8s) (default all)
+          only_warn: false # the action will only warn and not error when violations are found
+          verbose: true # will show violations with additional details (applicable for default output)
+          # non_recursive: false # do not scan directories and modules recursively
+          # policy_path:  policy path directory for custom policies
+          # skip_rules one or more rules to skip while scanning (example: "ruleID1,ruleID2")
+          # config_path: config file path
+          # sarif_upload: if true a sarif file named terrascan.sarif will be generated with the results of the scan
+          # find_vulnerabilities: will display vulnerabilities for Docker images present in the IaC files being scanned
+          # scm_token: will use given access token when authenticating to provided SCM to scan IaC templates/modules
+          # webhook_url: the URL where scanned report and normalized config json will be sent
+          # webhook_token: the auth token to call the notification webhook URL
+
+  checkov:
+    runs-on: ubuntu-latest
+    needs: collectInputs
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.collectInputs.outputs.directories) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Checkov action
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ matrix.directory }}
+          framework: all #terraform # optional: run only on a specific infrastructure {cloudformation,terraform,kubernetes,all}
+          output_format: cli # optional: the output format, one of: cli, json, junitxml, github_failed_only, or sarif. Default: sarif
+          download_external_modules: true # optional: download external terraform modules from public git repositories and terraform registry
+          #check: CKV_AWS_1 # optional: run only a specific check_id. can be comma separated list
+          #skip_check: CKV_AWS_2 # optional: skip a specific check_id. can be comma separated list
+          #quiet: true # optional: display only failed checks
+          #soft_fail: true # optional: do not return an error code if there are failed checks
+          #skip_framework: terraform # optional: skip a specific infrastructure {cloudformation,terraform,kubernetes,all}
+          #skip_cve_package: CVE_2019_8331 # optional: skip a specific CVE package in SCA scans, can be comma separated list
+          #output_file_path: reports/results.sarif # folder and name of results file
+          #output_bc_ids: true # optional: output Bridgecrew platform IDs instead of checkov IDs
+          #repo_root_for_plan_enrichment: example/ #optional: Directory containing the hcl code used to generate a given terraform plan file. Use together with `file`
+          #var_file: ./testdir/gocd.yaml # optional: variable files to load in addition to the default files. Currently only supported for source Terraform and Helm chart scans.
+          #log_level: DEBUG # optional: set log level. Default WARNING
+          #config_file: path/this_file
+          #baseline: cloudformation/.checkov.baseline # optional: Path to a generated baseline file. Will only report results not in the baseline.
+          #container_user: 1000 # optional: Define what UID and / or what GID to run the container under to prevent permission issues
+          #use_enforcement_rules: true # optional - use enforcement rule configs from the platform
