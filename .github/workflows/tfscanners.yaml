@@ -33,7 +33,7 @@ jobs:
           format: table #                 description: 'output format (table, json, template)'
           hide-progress: true #               description: 'suppress progress bar and log output'
           scan-ref: ${{ matrix.directory }} #               # this is weird, b/c "ref" generally means a git ref, but here it accepts a directory as well
-          scanners: vuln,secret,config #               # somehow, only vuln and secret scanners are enabled by default, so we need to enable config scanner explicitly
+#          scanners: vuln,secret,config #               # somehow, only vuln and secret scanners are enabled by default, so we need to enable config scanner explicitly. Also does not work with 'config'
 #          image-ref: #              description: 'image reference(for backward compatibility)'
 #          input: #                  description: 'reference of tar file to scan'
 #          ignore-unfixed: #         description: 'ignore unfixed vulnerabilities'
