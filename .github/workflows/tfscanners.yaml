@@ -10,7 +10,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Get root directories
         id: dirs
         uses: clowdhaus/terraform-composite-actions/directories@v1.9.0
@@ -23,17 +22,39 @@ jobs:
       matrix:
         directory: ${{ fromJson(needs.collectInputs.outputs.directories) }}
       fail-fast: false
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Run Trivy IaC Scanner
-        run: |
-          trivy config \
-          -q \
-          --format table \
-          --exit-code 1 \
-          ${{ matrix.directory }}
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config' #              description: 'Scan type to use for scanning vulnerability'
+          exit-code: 1 #              description: 'exit code when vulnerabilities were found'
+          format: table #                 description: 'output format (table, json, template)'
+          hide-progress: false #               description: 'suppress progress bar and log output'
+          scan-ref: ${{ matrix.directory }} #               description: 'Scan reference'
+#          image-ref: #              description: 'image reference(for backward compatibility)'
+#          input: #                  description: 'reference of tar file to scan'
+#          ignore-unfixed: #         description: 'ignore unfixed vulnerabilities'
+#          vuln-type: #              description: 'comma-separated list of vulnerability types (os,library)'
+#          severity: #               description: 'severities of vulnerabilities to be displayed'
+#          template: #               description: 'use an existing template for rendering output (@/contrib/gitlab.tpl, @/contrib/junit.tpl, @/contrib/html.tpl)'
+#          output: #                 description: 'writes results to a file with the specified file name'
+#          skip-dirs: #              description: 'comma separated list of directories where traversal is skipped'
+#          skip-files: #             description: 'comma separated list of files to be skipped'
+#          cache-dir: #              description: 'specify where the cache is stored'
+#          timeout: #                description: 'timeout (default 5m0s)'
+#          ignore-policy: #          description: 'filter vulnerabilities with OPA rego language'
+#          list-all-pkgs: #          description: 'output all packages regardless of vulnerability'
+#          scanners: #               description: 'comma-separated list of what security issues to detect'
+#          trivyignores: #           description: 'comma-separated list of relative paths in repository to one or more .trivyignore files'
+#          artifact-type: #          description: 'input artifact type (image, fs, repo, archive) for SBOM generation'
+#          github-pat: #             description: 'GitHub Personal Access Token (PAT) for submitting SBOM to GitHub Dependency Snapshot API'
+#          trivy-config: #           description: 'path to trivy.yaml config'
+#          tf-vars: #                description: "path to terraform tfvars file"
+#          limit-severities-for-sarif: #               description: 'limit severities for SARIF format'
+#          docker-host: #               description: 'unix domain socket path to use for docker scanning, ex. unix:///var/run/docker.sock'
+
 
   terrascan:
     runs-on: ubuntu-latest
@@ -52,17 +73,17 @@ jobs:
           iac_type: 'terraform' # IaC type (helm, k8s, kustomize, terraform)
           iac_version: 'v14' # IaC version (helm: v3, k8s: v1, kustomize: v3, terraform: v12, v14)
           policy_type: 'aws' # policy type (all, aws, azure, gcp, github, k8s) (default all)
-          only_warn: false # the action will only warn and not error when violations are found
           verbose: true # will show violations with additional details (applicable for default output)
-          # non_recursive: false # do not scan directories and modules recursively
-          # policy_path:  policy path directory for custom policies
-          # skip_rules one or more rules to skip while scanning (example: "ruleID1,ruleID2")
-          # config_path: config file path
-          # sarif_upload: if true a sarif file named terrascan.sarif will be generated with the results of the scan
-          # find_vulnerabilities: will display vulnerabilities for Docker images present in the IaC files being scanned
-          # scm_token: will use given access token when authenticating to provided SCM to scan IaC templates/modules
-          # webhook_url: the URL where scanned report and normalized config json will be sent
-          # webhook_token: the auth token to call the notification webhook URL
+          #only_warn: false # the action will only warn and not error when violations are found
+          #non_recursive: false # do not scan directories and modules recursively
+          #policy_path:  policy path directory for custom policies
+          #skip_rules one or more rules to skip while scanning (example: "ruleID1,ruleID2")
+          #config_path: config file path
+          #sarif_upload: if true a sarif file named terrascan.sarif will be generated with the results of the scan
+          #find_vulnerabilities: will display vulnerabilities for Docker images present in the IaC files being scanned
+          #scm_token: will use given access token when authenticating to provided SCM to scan IaC templates/modules
+          #webhook_url: the URL where scanned report and normalized config json will be sent
+          #webhook_token: the auth token to call the notification webhook URL
 
   checkov:
     runs-on: ubuntu-latest
