@@ -72,7 +72,7 @@ jobs:
           iac_dir: ${{ matrix.directory }} # path to a directory containing one or more IaC files (default ".")
           iac_type: 'terraform' # IaC type (helm, k8s, kustomize, terraform)
           iac_version: 'v15' # IaC version (helm: v3, k8s: v1, kustomize: v3, terraform: v12, v14)
-          policy_type: 'aws' # policy type (all, aws, azure, gcp, github, k8s) (default all)
+          policy_type: 'all' # policy type (all, aws, azure, gcp, github, k8s) (default all)
           verbose: true # will show violations with additional details (applicable for default output)
           #only_warn: false # the action will only warn and not error when violations are found
           #non_recursive: false # do not scan directories and modules recursively
@@ -138,3 +138,22 @@ jobs:
           soft_fail: false
 #          additional_args: '--update'
 
+  kicks:
+    runs-on: ubuntu-latest
+    needs: collectInputs
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.collectInputs.outputs.directories) }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run KICS
+        id: kicks
+        uses: checkmarx/kics-github-action@main
+        with:
+          enable_comments: false
+          enable_jobs_summary: true
+          path: ${{ matrix.directory }}
+          type: terraform
+          # platform_type: terraform
