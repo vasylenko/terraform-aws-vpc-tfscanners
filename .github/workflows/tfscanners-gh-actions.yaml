@@ -1,4 +1,4 @@
-name: Scannes with GH Actions
+name: Scanners with GH Actions
 on:
   push:
 jobs:
