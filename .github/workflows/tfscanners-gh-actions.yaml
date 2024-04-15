@@ -157,7 +157,7 @@ jobs:
           path: ${{ matrix.directory }}
           type: terraform
           ignore_on_exit: results
-          output_formats: all
+          output_formats: 'json,pdf,asff'
           output_path: /kicks-results-${{ matrix.directory }}
       - uses: actions/upload-artifact@v4
         with:
