@@ -156,11 +156,12 @@ jobs:
           enable_jobs_summary: true
           path: ${{ matrix.directory }}
           type: terraform
+          ignore_on_exit: results
           output_formats: all
-          output_path: /kicks-results
+          output_path: /kicks-results-${{ matrix.directory }}
       - uses: actions/upload-artifact@v4
         with:
           name: kicks-results
-          path: /kicks-results
+          path: /kicks-results-${{ matrix.directory }}
 
           # platform_type: terraform
