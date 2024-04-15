@@ -161,7 +161,7 @@ jobs:
           output_path: /kicks-results-${{ matrix.directory }}
       - uses: actions/upload-artifact@v4
         with:
-          name: kicks-results
+          name: kicks-results-${{ matrix.directory }}
           path: /kicks-results-${{ matrix.directory }}
 
           # platform_type: terraform
